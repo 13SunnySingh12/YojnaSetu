@@ -52,7 +52,7 @@ Government sources (API Setu myScheme, data.gov.in OGD) ──> AI/ingestion ─
 ### Phase 1 — Foundation
 - `[✓]` **YS-001** Repository foundation: ignore rules, env template, this plan. *Verify:* no secrets tracked; pushed.
 - `[✓]` **YS-002** Local Atlas (compose) and proof that `$vectorSearch` + `$text` work on it. *Verify:* scripted probe returns expected nearest neighbour.
-- `[ ]` **YS-003** AI service skeleton: settings, Mongo client, internal-token guard (fail closed), `/health`, Gemini/Groq clients with fallback. *Verify:* pytest with mock transports.
+- `[✓]` **YS-003** AI service skeleton: settings, Mongo client, internal-token guard (fail closed), `/health`, Gemini/Groq clients with fallback. *Verify:* pytest with mock transports.
 - `[ ]` **YS-004** Ingestion core: record validation (official https source on `.gov.in`/`.nic.in`), chunking, hashing, idempotent upsert, `$jsonSchema` validator, indexes. *Verify:* integration test on local Atlas.
 - `[ ]` **YS-005** Ingestion sources: myScheme (API Setu v7) and OGD adapters (+ SQL cleaning). *Verify:* unit tests on documented shapes; live check in YS-019.
 
