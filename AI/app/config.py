@@ -25,6 +25,9 @@ GROQ_CHAT_MODEL = _env("GROQ_CHAT_MODEL", "llama-3.3-70b-versatile")
 
 # Must match numDimensions of the Atlas vector index; changing it means re-embedding everything.
 EMBEDDING_DIMENSIONS = 768
+# Minimum Atlas vectorSearchScore ((1 + cosine) / 2) for a chunk to count as relevant evidence.
+# A tuning knob: calibrated against real embeddings, so it stays adjustable without a deploy.
+RETRIEVAL_MIN_SCORE = float(_env("RETRIEVAL_MIN_SCORE", "0.75"))
 
 # Government data ingestion credentials (used only by `python -m ingestion`).
 APISETU_CLIENT_ID = _env("APISETU_CLIENT_ID")

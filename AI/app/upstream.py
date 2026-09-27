@@ -21,13 +21,14 @@ class UpstreamError(Exception):
 
 
 def request_json(method: str, url: str, *, headers: dict | None = None, params: dict | None = None,
-                 json: dict | None = None, attempts: int = 1) -> dict:
+                 json: dict | None = None, attempts: int = 1, timeout: float = 30.0) -> dict:
     """Bounded retries on rate limits, server errors and transport failures only."""
     error = UpstreamError("no attempt made")
     for attempt in range(1, attempts + 1):
         wait = 2 ** attempt
         try:
-            resp = client.request(method, url, headers=headers, params=params, json=json)
+            resp = client.request(method, url, headers=headers, params=params, json=json,
+                                  timeout=httpx.Timeout(timeout, connect=5.0))
         except httpx.TransportError as exc:
             error = UpstreamError(f"{type(exc).__name__} calling upstream service")
         else:

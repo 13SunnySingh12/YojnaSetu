@@ -164,10 +164,13 @@ def test_generate_raises_when_nothing_is_configured(monkeypatch):
         providers.generate("s", "p")
 
 
-def test_transport_failure_is_retried_then_reported(fake):
+def test_transport_failure_is_retried_for_ingestion_but_not_for_user_queries(fake):
     def fail(request):
         raise httpx.ConnectTimeout("timed out", request=request)
     fake["routes"][EMBED_URL] = fail
     with pytest.raises(upstream.UpstreamError, match="ConnectTimeout"):
+        providers.embed_documents([("t", "x")])
+    assert len(fake["calls"]) == 5
+    with pytest.raises(upstream.UpstreamError):
         providers.embed_query("x")
-    assert len(fake["calls"]) == 2
+    assert len(fake["calls"]) == 6

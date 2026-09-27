@@ -10,15 +10,17 @@ log = logging.getLogger(__name__)
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 GROQ_CHAT_URL = "https://api.groq.com/openai/v1/chat/completions"
 EMBED_BATCH_SIZE = 50
+GENERATION_TIMEOUT = 15.0
 
 
 def embed_query(text: str) -> list[float]:
-    return _embed([(None, text)], query=True, attempts=2)[0]
+    # One quick attempt: callers degrade (keyword-only search) rather than keep the user waiting.
+    return _embed([(None, text)], query=True, attempts=1, timeout=10)[0]
 
 
 def embed_documents(docs: list[tuple[str, str]]) -> list[list[float]]:
     """Embeds (title, text) pairs for storage; retries harder because ingestion is not user-facing."""
-    return _embed(docs, query=False, attempts=5)
+    return _embed(docs, query=False, attempts=5, timeout=60)
 
 
 def generate(system: str, prompt: str, max_tokens: int = 512) -> tuple[str, str]:
@@ -38,7 +40,7 @@ def generate(system: str, prompt: str, max_tokens: int = 512) -> tuple[str, str]
     raise UpstreamError("; ".join(errors) or "no LLM provider is configured")
 
 
-def _embed(docs: list[tuple[str | None, str]], query: bool, attempts: int) -> list[list[float]]:
+def _embed(docs: list[tuple[str | None, str]], query: bool, attempts: int, timeout: float) -> list[list[float]]:
     if not config.GEMINI_API_KEY:
         raise UpstreamError("GEMINI_API_KEY is not configured")
     model = config.GEMINI_EMBEDDING_MODEL
@@ -61,7 +63,7 @@ def _embed(docs: list[tuple[str | None, str]], query: bool, attempts: int) -> li
             requests.append(request)
         data = request_json("POST", f"{GEMINI_BASE}/models/{model}:batchEmbedContents",
                             headers={"x-goog-api-key": config.GEMINI_API_KEY},
-                            json={"requests": requests}, attempts=attempts)
+                            json={"requests": requests}, attempts=attempts, timeout=timeout)
         embeddings = data.get("embeddings") or []
         if len(embeddings) != len(requests):
             raise UpstreamError(f"expected {len(requests)} embeddings, got {len(embeddings)}")
@@ -87,6 +89,7 @@ def _gemini_generate(system: str, prompt: str, max_tokens: int) -> str:
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
             "generationConfig": {"temperature": 0.2, "maxOutputTokens": max_tokens},
         },
+        timeout=GENERATION_TIMEOUT,
     )  # single attempt: the Groq fallback is the retry for user-facing calls
     candidates = data.get("candidates") or []
     parts = (candidates[0].get("content") or {}).get("parts") or [] if candidates else []
@@ -108,6 +111,7 @@ def _groq_generate(system: str, prompt: str, max_tokens: int) -> str:
             "max_completion_tokens": max_tokens,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
         },
+        timeout=GENERATION_TIMEOUT,
     )
     choices = data.get("choices") or []
     text = ((choices[0].get("message") or {}).get("content") or "").strip() if choices else ""
