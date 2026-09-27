@@ -1,0 +1,29 @@
+# Secrets — never commit real values; .env.example is the template
+.env
+.env.*
+!.env.example
+
+# Java / Maven
+Backend/target/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+Frontend/dist/
+Frontend/coverage/
+
+# Logs
+*.log
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
