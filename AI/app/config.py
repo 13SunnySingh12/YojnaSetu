@@ -20,8 +20,9 @@ GEMINI_API_KEY = _env("GEMINI_API_KEY")
 GROQ_API_KEY = _env("GROQ_API_KEY")
 # Provider model IDs get retired over time, so they stay overridable without a code change.
 GEMINI_EMBEDDING_MODEL = _env("GEMINI_EMBEDDING_MODEL", "gemini-embedding-2")
-GEMINI_CHAT_MODEL = _env("GEMINI_CHAT_MODEL", "gemini-flash-latest")
-GROQ_CHAT_MODEL = _env("GROQ_CHAT_MODEL", "llama-3.3-70b-versatile")
+# Pinned to models verified with live calls (a moving alias changed behaviour under us once).
+GEMINI_CHAT_MODEL = _env("GEMINI_CHAT_MODEL", "gemini-3.8-flash")
+GROQ_CHAT_MODEL = _env("GROQ_CHAT_MODEL", "openai/gpt-oss-120b")
 
 # Must match numDimensions of the Atlas vector index; changing it means re-embedding everything.
 EMBEDDING_DIMENSIONS = 768

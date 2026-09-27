@@ -114,6 +114,7 @@ def test_generate_prefers_gemini(fake):
 
     body = json.loads(fake["calls"][0].content)
     assert (text, provider) == ("Simple answer.", "gemini")
+    assert body["generationConfig"]["thinkingConfig"] == {"thinkingBudget": 0}
     assert body["systemInstruction"]["parts"][0]["text"] == "system rules"
     assert body["contents"][0]["parts"][0]["text"] == "question"
 
@@ -130,6 +131,8 @@ def test_generate_falls_back_to_groq_when_gemini_fails(fake):
     assert groq_request.headers["authorization"] == "Bearer test-groq-key"
     assert body["messages"][0] == {"role": "system", "content": "system rules"}
     assert body["model"] == config.GROQ_CHAT_MODEL
+    assert body["reasoning_effort"] == "low" and body["include_reasoning"] is False
+    assert body["max_completion_tokens"] > 512  # headroom for reasoning tokens
 
 
 def test_generate_falls_back_when_gemini_blocks_the_prompt(fake):

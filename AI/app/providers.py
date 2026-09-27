@@ -87,7 +87,9 @@ def _gemini_generate(system: str, prompt: str, max_tokens: int) -> str:
         json={
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.2, "maxOutputTokens": max_tokens},
+            # Thinking tokens count against maxOutputTokens; short grounded rewrites do not need them.
+            "generationConfig": {"temperature": 0.2, "maxOutputTokens": max_tokens,
+                                 "thinkingConfig": {"thinkingBudget": 0}},
         },
         timeout=GENERATION_TIMEOUT,
     )  # single attempt: the Groq fallback is the retry for user-facing calls
@@ -108,7 +110,10 @@ def _groq_generate(system: str, prompt: str, max_tokens: int) -> str:
         json={
             "model": config.GROQ_CHAT_MODEL,
             "temperature": 0.2,
-            "max_completion_tokens": max_tokens,
+            # gpt-oss reasons before answering and those tokens count against this limit.
+            "max_completion_tokens": max_tokens + 512,
+            "reasoning_effort": "low",
+            "include_reasoning": False,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}],
         },
         timeout=GENERATION_TIMEOUT,
