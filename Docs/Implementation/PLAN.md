@@ -64,11 +64,11 @@ Government sources (API Setu myScheme, data.gov.in OGD) ──> AI/ingestion ─
 - `[✓]` **YS-010** Spring Boot AI integration: combined search, degradation, rate limits. *Features 1, 29, 45–49.*
 
 ### Phase 3 — Frontend
-- `[ ]` **YS-011** Scaffold: Vite + React (JS), router, API client, layout, design tokens.
-- `[ ]` **YS-012** Home, search, category and needs browsing. *Features 1–4, 34–35.*
-- `[ ]` **YS-013** Scheme detail: sections, "Not available from the official source", official source, Explain simply, related, compare selection. *Features 9, 13–20, 27, 32, 36–37, 43.*
-- `[ ]` **YS-014** Eligibility question flow and results with guidance notice. *Features 6–12, 38.*
-- `[ ]` **YS-015** Compare and Ask pages. *Features 22, 26, 33.*
+- `[✓]` **YS-011** Scaffold: Vite + React (JS), router, API client, layout, design tokens.
+- `[✓]` **YS-012** Home, search, category and needs browsing. *Features 1–4, 34–35.*
+- `[✓]` **YS-013** Scheme detail: sections, "Not available from the official source", official source, Explain simply, related, compare selection. *Features 9, 13–20, 27, 32, 36–37, 43.*
+- `[✓]` **YS-014** Eligibility question flow and results with guidance notice. *Features 6–12, 38.*
+- `[✓]` **YS-015** Compare and Ask pages. *Features 22, 26, 33.*
 
 ### Phase 4 — Delivery
 - `[ ]` **YS-016** Dockerfiles and full local stack (healthy and working). *Feature 50.*
