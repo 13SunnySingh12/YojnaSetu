@@ -36,6 +36,8 @@ class AiApiTests extends IntegrationTestSupport {
 		json.extractingPath("$.total").asNumber().isEqualTo(2);
 		assertThat(FakeAiServer.requests()).singleElement()
 			.satisfies(r -> assertThat(r.token()).isEqualTo("test-token"))
+			// uvicorn does not support the h2c upgrade and drops the POST body (found in a live run)
+			.satisfies(r -> assertThat(r.upgrade()).isNull())
 			.satisfies(r -> assertThat(r.body()).contains("\"query\":\"pension\""));
 	}
 

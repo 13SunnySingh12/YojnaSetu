@@ -33,8 +33,12 @@ public class AiClient {
 		if (!configured) {
 			log.warn("AI_SERVICE_TOKEN is not set: AI features are disabled");
 		}
-		var factory = new JdkClientHttpRequestFactory(
-				HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build());
+		// HTTP/1.1: over plain http the JDK client otherwise attempts an h2c upgrade, which uvicorn does not
+		// support, and the POST body is lost (the AI service then answers 422).
+		var factory = new JdkClientHttpRequestFactory(HttpClient.newBuilder()
+			.version(HttpClient.Version.HTTP_1_1)
+			.connectTimeout(Duration.ofSeconds(3))
+			.build());
 		// Covers the AI service's own worst case: query embedding plus two generation attempts.
 		factory.setReadTimeout(Duration.ofSeconds(45));
 		this.http = builder.baseUrl(properties.aiServiceUrl())

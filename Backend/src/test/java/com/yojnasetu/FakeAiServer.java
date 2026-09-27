@@ -18,7 +18,7 @@ import com.sun.net.httpserver.HttpServer;
  */
 public final class FakeAiServer {
 
-	public record Recorded(String path, String token, String body) {
+	public record Recorded(String path, String token, String upgrade, String body) {
 	}
 
 	private record Reply(int status, String json) {
@@ -61,6 +61,7 @@ public final class FakeAiServer {
 				try (InputStream in = exchange.getRequestBody(); OutputStream out = exchange.getResponseBody()) {
 					String path = exchange.getRequestURI().getPath();
 					requests.add(new Recorded(path, exchange.getRequestHeaders().getFirst("X-Internal-Token"),
+							exchange.getRequestHeaders().getFirst("Upgrade"),
 							new String(in.readAllBytes(), StandardCharsets.UTF_8)));
 					Reply reply = replies.getOrDefault(path, new Reply(503, "{\"detail\":\"AI provider unavailable\"}"));
 					byte[] body = reply.json().getBytes(StandardCharsets.UTF_8);
