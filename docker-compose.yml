@@ -1,0 +1,15 @@
+# Local development stack. MongoDB here is Atlas Local (supports Vector Search) with no auth,
+# so it is bound to 127.0.0.1 only. Production uses MongoDB Atlas via MONGODB_URI.
+services:
+  mongodb:
+    image: mongodb/mongodb-atlas-local:8.0
+    container_name: yojnasetu-mongo
+    ports:
+      - "127.0.0.1:27018:27017"
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+
+volumes:
+  mongo-data:
+  mongo-config:
