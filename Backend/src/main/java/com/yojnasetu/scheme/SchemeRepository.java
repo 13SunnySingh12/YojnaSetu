@@ -83,7 +83,17 @@ public class SchemeRepository {
 	}
 
 	public List<String> beneficiaryTypes() {
-		return mongo.findDistinct(new Query(), "beneficiaryTypes", COLLECTION, String.class).stream()
+		return distinct("beneficiaryTypes");
+	}
+
+	/** Occupations named in stored eligibility conditions (the vocabulary the rule engine compares). */
+	public List<String> occupations() {
+		return distinct("eligibility.occupations");
+	}
+
+	private List<String> distinct(String field) {
+		return mongo.findDistinct(new Query(), field, COLLECTION, String.class).stream()
+			.filter(v -> !v.equalsIgnoreCase("All"))
 			.sorted()
 			.toList();
 	}

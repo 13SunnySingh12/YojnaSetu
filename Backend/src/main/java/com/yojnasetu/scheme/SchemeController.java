@@ -56,11 +56,12 @@ class SchemeController {
 	@GetMapping("/filters")
 	FilterOptions filters() {
 		return new FilterOptions(repository.categoryCounts(), IndianStates.ALL, repository.beneficiaryTypes(),
-				Needs.options(), GENDERS, List.of("Central", "State"));
+				repository.occupations(), Needs.options(), GENDERS, List.of("Central", "State"));
 	}
 
 	record FilterOptions(List<SchemeRepository.CategoryCount> categories, List<String> states,
-			List<String> beneficiaryTypes, List<Needs.Option> needs, List<String> genders, List<String> levels) {
+			List<String> beneficiaryTypes, List<String> occupations, List<Needs.Option> needs, List<String> genders,
+			List<String> levels) {
 	}
 
 	private static String knownNeed(String need) {

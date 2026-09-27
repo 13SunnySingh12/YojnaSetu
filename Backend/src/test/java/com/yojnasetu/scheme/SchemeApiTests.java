@@ -97,6 +97,7 @@ class SchemeApiTests extends IntegrationTestSupport {
 			.hasPathSatisfying("$.states", v -> assertThat(v).asArray().hasSize(36))
 			.hasPathSatisfying("$.needs", v -> assertThat(v).asArray().hasSize(8))
 			.hasPathSatisfying("$.beneficiaryTypes", v -> assertThat(v).asArray().containsExactly("Individual"))
+			.hasPathSatisfying("$.occupations", v -> assertThat(v).asArray().isEmpty())
 			.extractingPath("$.categories[?(@.name == 'Housing & Shelter')].count").asArray().containsExactly(1);
 	}
 
