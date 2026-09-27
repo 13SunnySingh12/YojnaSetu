@@ -71,7 +71,7 @@ Government sources (API Setu myScheme, data.gov.in OGD) ──> AI/ingestion ─
 - `[✓]` **YS-015** Compare and Ask pages. *Features 22, 26, 33.*
 
 ### Phase 4 — Delivery
-- `[ ]` **YS-016** Dockerfiles and full local stack (healthy and working). *Feature 50.*
+- `[✓]` **YS-016** Dockerfiles and full local stack (healthy and working). *Feature 50.*
 - `[ ]` **YS-017** GitHub Actions CI with guarded deploy hooks. *Feature 51.*
 
 ### Phase 5 — Live integration

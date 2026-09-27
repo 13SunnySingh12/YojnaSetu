@@ -1,5 +1,6 @@
-# Local development stack. MongoDB here is Atlas Local (supports Vector Search) with no auth,
-# so it is bound to 127.0.0.1 only. Production uses MongoDB Atlas via MONGODB_URI.
+# Local stack: Atlas Local (supports Vector Search), the AI service and the backend.
+# Ports bind to 127.0.0.1 only; MongoDB here has no auth. Secrets come from the optional .env file.
+# Frontend: run `npm run dev` in Frontend/ (it proxies /api to the backend on :8080).
 services:
   mongodb:
     image: mongodb/mongodb-atlas-local:8.0
@@ -9,6 +10,35 @@ services:
     volumes:
       - mongo-data:/data/db
       - mongo-config:/data/configdb
+
+  ai:
+    build: ./AI
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/?directConnection=true
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  backend:
+    build: ./Backend
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/?directConnection=true
+      AI_SERVICE_URL: http://ai:8000
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      ai:
+        condition: service_started
 
 volumes:
   mongo-data:
