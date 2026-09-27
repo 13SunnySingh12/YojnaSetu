@@ -32,9 +32,10 @@ final class RankFusion {
 			.stream()
 			.map(e -> new Fused(e.getKey(), e.getValue(), byKeyword.contains(e.getKey()),
 					byMeaning.contains(e.getKey())))
-			// On equal scores an exact keyword match comes first.
+			// A scheme found by both methods already scores highest. On a tie the meaning match wins: the
+			// keyword side of a tie is often a single shared everyday word ("help", "scheme").
 			.sorted(Comparator.comparingDouble(Fused::score).reversed()
-				.thenComparing(f -> !f.keyword())
+				.thenComparing(f -> !f.meaning())
 				.thenComparing(Fused::id))
 			.toList();
 	}

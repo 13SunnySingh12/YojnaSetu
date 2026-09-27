@@ -9,6 +9,7 @@ import {
   ListSkeleton,
   Loading,
   OfficialText,
+  RichText,
   SchemeItem,
   SourceLink,
 } from '../components.jsx'
@@ -51,7 +52,11 @@ function Explainable({ schemeId, section, text }) {
         {shown && (
           <div className="simple" aria-live="polite">
             <span className="label">In simple words · written by AI from the official text</span>
-            {state.explanation ?? 'A simpler version could not be made for this text. Please read the official text.'}
+            {state.explanation ? (
+              <RichText text={state.explanation} />
+            ) : (
+              'A simpler version could not be made for this text. Please read the official text.'
+            )}
           </div>
         )}
       </div>

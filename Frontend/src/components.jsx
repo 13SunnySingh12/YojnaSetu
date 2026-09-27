@@ -54,17 +54,21 @@ function linkify(text, keyPrefix) {
   )
 }
 
-/** Official wording exactly as stored: line breaks kept, **bold** rendered, plain web links clickable. */
+/** Stored or generated text rendered safely: **bold** and plain web links; line breaks are kept by CSS. */
+export function RichText({ text }) {
+  return text
+    .split(BOLD)
+    .map((piece, i) => (i % 2 === 1 ? <strong key={i}>{linkify(piece, i)}</strong> : linkify(piece, i)))
+}
+
+/** Official wording exactly as stored, or a plain statement that the source did not provide it. */
 export function OfficialText({ text, as: Tag = 'p' }) {
   if (!text || !text.trim()) {
     return <Tag className="official official--missing">{NOT_AVAILABLE}</Tag>
   }
-  const pieces = text.split(BOLD)
   return (
     <Tag className="official">
-      {pieces.map((piece, i) =>
-        i % 2 === 1 ? <strong key={i}>{linkify(piece, i)}</strong> : linkify(piece, i),
-      )}
+      <RichText text={text} />
     </Tag>
   )
 }

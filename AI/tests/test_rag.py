@@ -1,7 +1,7 @@
 """MOCK / TEST ONLY: retrieval hits and model replies below are fakes."""
 import pytest
 
-from app import providers, rag
+from app import config, providers, rag
 
 
 def hit(scheme_id, score, section="overview", text="Official text."):
@@ -12,6 +12,8 @@ def hit(scheme_id, score, section="overview", text="Official text."):
 @pytest.fixture
 def fakes(monkeypatch):
     state = {"hits": [], "reply": "Answer from the context.", "prompts": []}
+    # The production threshold is a tuning knob; these tests exercise the logic at a fixed value.
+    monkeypatch.setattr(config, "RETRIEVAL_MIN_SCORE", 0.75)
     monkeypatch.setattr(providers, "embed_query", lambda text: [0.1])
     monkeypatch.setattr(rag, "vector_search", lambda vector, limit, filter=None: state["hits"])
 

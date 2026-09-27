@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { GuidanceNotice, NOT_AVAILABLE, OfficialText, StatusPlate } from '../components.jsx'
+import { GuidanceNotice, NOT_AVAILABLE, OfficialText, RichText, StatusPlate } from '../components.jsx'
 
 describe('OfficialText', () => {
   it('says plainly when the official source did not provide the text', () => {
@@ -23,6 +23,18 @@ describe('OfficialText', () => {
     expect(links[0].getAttribute('href')).toBe('https://example.gov.in/apply')
     expect(links[0].getAttribute('rel')).toBe('noopener noreferrer')
     expect(container.textContent).toContain('javascript:alert(1)')
+  })
+})
+
+describe('RichText', () => {
+  it('renders generated markdown bold instead of showing asterisks', () => {
+    const { container } = render(
+      <p>
+        <RichText text={'**Who can apply:**\n- Girls in class 9 to 12'} />
+      </p>,
+    )
+    expect(container.querySelector('strong').textContent).toBe('Who can apply:')
+    expect(container.textContent).not.toContain('**')
   })
 })
 

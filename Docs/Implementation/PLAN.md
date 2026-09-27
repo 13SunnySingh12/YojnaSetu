@@ -76,7 +76,7 @@ Government sources (API Setu myScheme, data.gov.in OGD) ──> AI/ingestion ─
 
 ### Phase 5 — Live integration
 - `[!]` **YS-018** Credentials configured locally (manual).
-- `[ ]` **YS-019** Live probes: embedding + chat model IDs; myScheme search-response shape and any conditions/exclusions field; structured eligibility facets; real OGD resource IDs for `ogd_datasets.json`; adapter fixes.
+- `[→]` **YS-019** Live probes: embedding + chat model IDs; myScheme search-response shape and any conditions/exclusions field; structured eligibility facets; real OGD resource IDs for `ogd_datasets.json`; adapter fixes. *Done so far:* Gemini embeddings (`gemini-embedding-2`, 768-dim), Gemini `gemini-3.8-flash` and Groq `openai/gpt-oss-120b` generation verified live; retrieval threshold calibrated to 0.81 on real embeddings; end-to-end search, RAG, explain, related and eligibility explanation verified through the API. *Pending:* myScheme and data.gov.in credentials.
 - `[ ]` **YS-020** Real ingestion into Atlas; retrieval threshold calibration; grounding checks. *Features 40–44.*
 - `[→]` **YS-021** Render + Vercel deployment and smoke tests. *Features 52–53.* Config committed (`render.yaml`, `Frontend/vercel.json`); not yet deployed.
 - `[ ]` **YS-022** Final audit against every feature in the spec.

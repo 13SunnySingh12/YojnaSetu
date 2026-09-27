@@ -18,9 +18,10 @@ class RankFusionTests {
 	}
 
 	@Test
-	void onEqualScoresTheKeywordMatchWins() {
-		assertThat(RankFusion.fuse(List.of("exact"), List.of("vague")))
-			.extracting(RankFusion.Fused::id).containsExactly("exact", "vague");
+	void onEqualScoresTheMeaningMatchWins() {
+		// Found live: a scheme sharing only the word "help" tied with the right scheme found by meaning.
+		assertThat(RankFusion.fuse(List.of("shares-a-word"), List.of("same-meaning")))
+			.extracting(RankFusion.Fused::id).containsExactly("same-meaning", "shares-a-word");
 	}
 
 	@Test

@@ -27,8 +27,9 @@ GROQ_CHAT_MODEL = _env("GROQ_CHAT_MODEL", "openai/gpt-oss-120b")
 # Must match numDimensions of the Atlas vector index; changing it means re-embedding everything.
 EMBEDDING_DIMENSIONS = 768
 # Minimum Atlas vectorSearchScore ((1 + cosine) / 2) for a chunk to count as relevant evidence.
-# A tuning knob: calibrated against real embeddings, so it stays adjustable without a deploy.
-RETRIEVAL_MIN_SCORE = float(_env("RETRIEVAL_MIN_SCORE", "0.75"))
+# Measured with gemini-embedding-2 at 768 dims: relevant queries scored 0.845-0.884, unrelated ones
+# 0.760-0.776. A tuning knob, so it stays adjustable without a deploy as the corpus grows.
+RETRIEVAL_MIN_SCORE = float(_env("RETRIEVAL_MIN_SCORE", "0.81"))
 
 # Government data ingestion credentials (used only by `python -m ingestion`).
 APISETU_CLIENT_ID = _env("APISETU_CLIENT_ID")

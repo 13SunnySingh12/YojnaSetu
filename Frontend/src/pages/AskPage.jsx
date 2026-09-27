@@ -2,7 +2,7 @@ import { CircleQuestionMark, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { api, useApi } from '../api.js'
-import { ErrorMessage, SourceLink } from '../components.jsx'
+import { ErrorMessage, RichText, SourceLink } from '../components.jsx'
 
 export default function AskPage() {
   const [params, setParams] = useSearchParams()
@@ -105,7 +105,9 @@ export default function AskPage() {
           <p className="answer__question">{answer.question}</p>
           {answer.grounded ? (
             <>
-              <p className="answer__text">{answer.answer}</p>
+              <p className="answer__text">
+                <RichText text={answer.answer} />
+              </p>
               <p className="fine mt-s">
                 Written by AI from official scheme text. Check the official source before you act on it.
               </p>

@@ -2,7 +2,7 @@ import { ArrowLeft, ArrowRight, CircleCheck, CircleQuestionMark, CircleX, Messag
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { api, useApi } from '../api.js'
-import { CompareToggle, Empty, ErrorMessage, GuidanceNotice, Loading, SourceLink, StatusPlate } from '../components.jsx'
+import { CompareToggle, Empty, ErrorMessage, GuidanceNotice, Loading, RichText, SourceLink, StatusPlate } from '../components.jsx'
 import { buildQuestions, describeAnswer, toProfile, validateAnswer } from '../eligibility.js'
 
 function Question({ question, value, error, onChange, titleRef }) {
@@ -160,7 +160,7 @@ function Result({ result, profile }) {
       {explanation.status === 'done' && (
         <div className="simple" aria-live="polite">
           <span className="label">In simple words · written by AI from the result above</span>
-          {explanation.text}
+          <RichText text={explanation.text} />
         </div>
       )}
       {explanation.status === 'error' && <ErrorMessage error={explanation.error} />}
