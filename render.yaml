@@ -1,0 +1,53 @@
+# Render Blueprint: the Spring Boot backend and the FastAPI AI service as Docker web services.
+# Deploys are triggered by the CI workflow's deploy hooks after tests pass (autoDeployTrigger: off).
+# Values marked sync: false are entered in the Render dashboard; they are never stored in the repository.
+services:
+  - type: web
+    name: yojnasetu-ai
+    runtime: docker
+    region: singapore
+    plan: free
+    branch: main
+    dockerfilePath: ./AI/Dockerfile
+    dockerContext: ./AI
+    healthCheckPath: /health
+    autoDeployTrigger: off
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DATABASE
+        value: yojnasetu
+      # Generated once here and copied into the backend, so the shared secret is never handled by hand.
+      - key: AI_SERVICE_TOKEN
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+
+  - type: web
+    name: yojnasetu-backend
+    runtime: docker
+    region: singapore
+    plan: free
+    branch: main
+    dockerfilePath: ./Backend/Dockerfile
+    dockerContext: ./Backend
+    healthCheckPath: /actuator/health/liveness
+    autoDeployTrigger: off
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DATABASE
+        value: yojnasetu
+      - key: AI_SERVICE_TOKEN
+        fromService:
+          type: web
+          name: yojnasetu-ai
+          envVarKey: AI_SERVICE_TOKEN
+      # Free services cannot receive private-network traffic, so this is the AI service's public URL.
+      - key: AI_SERVICE_URL
+        sync: false
+      # The Vercel production URL of the frontend.
+      - key: ALLOWED_ORIGINS
+        sync: false
