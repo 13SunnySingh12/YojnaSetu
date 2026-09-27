@@ -10,6 +10,7 @@ from pymongo.database import Database
 from pymongo.operations import SearchIndexModel
 
 from app import config, providers
+from app.upstream import UpstreamError
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +60,7 @@ def ensure_schema(db: Database) -> None:
         default_language="english", name="scheme_text")
     db.schemes.create_index("categories")
     db.schemes.create_index("state")
+    db.schemes.create_index("nameKey")
     db.scheme_chunks.create_index("schemeId")
     if not list(db.scheme_chunks.list_search_indexes(VECTOR_INDEX)):
         db.scheme_chunks.create_search_index(SearchIndexModel(name=VECTOR_INDEX, type="vectorSearch", definition={
@@ -131,8 +133,9 @@ def build_chunks(record: dict) -> list[dict]:
     return chunks
 
 
-def store_schemes(db: Database, records: list[dict], embed=providers.embed_documents) -> dict:
+def store_schemes(db: Database, records: list[dict], embed=None) -> dict:
     """Upserts valid records and embeds only chunks whose content changed. Returns run statistics."""
+    embed = embed or providers.embed_documents
     stats = {"stored": 0, "skipped": [], "failed": [], "chunks_embedded": 0, "chunks_removed": 0}
     now = datetime.now(timezone.utc)
     consecutive_failures = 0
@@ -152,7 +155,7 @@ def store_schemes(db: Database, records: list[dict], embed=providers.embed_docum
             # A chunk is written only together with its embedding, so a failed run is simply re-run.
             try:
                 vectors = embed([(c["title"], c["text"]) for c in changed])
-            except providers.ProviderError as exc:
+            except UpstreamError as exc:
                 stats["failed"].append((record["_id"], str(exc)))
                 log.error("embedding failed for %s: %s", record["_id"], exc)
                 consecutive_failures += 1

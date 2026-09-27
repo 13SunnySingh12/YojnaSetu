@@ -25,3 +25,8 @@ GROQ_CHAT_MODEL = _env("GROQ_CHAT_MODEL", "llama-3.3-70b-versatile")
 
 # Must match numDimensions of the Atlas vector index; changing it means re-embedding everything.
 EMBEDDING_DIMENSIONS = 768
+
+# Government data ingestion credentials (used only by `python -m ingestion`).
+APISETU_CLIENT_ID = _env("APISETU_CLIENT_ID")
+APISETU_API_KEY = _env("APISETU_API_KEY")
+DATA_GOV_IN_API_KEY = _env("DATA_GOV_IN_API_KEY")

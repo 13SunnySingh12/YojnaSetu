@@ -4,7 +4,7 @@ import time
 import pytest
 from pymongo.errors import WriteError
 
-from app import providers
+from app import upstream
 from conftest import FakeEmbedder
 from ingestion.store import VECTOR_INDEX, ensure_schema, prune_missing, store_schemes, wait_for_vector_index
 
@@ -56,9 +56,9 @@ def test_embedding_failure_skips_the_scheme_and_aborts_after_three_in_a_row(test
     ensure_schema(test_db)
 
     def failing(docs):
-        raise providers.ProviderError("quota exhausted")
+        raise upstream.UpstreamError("quota exhausted")
 
-    with pytest.raises(providers.ProviderError):
+    with pytest.raises(upstream.UpstreamError):
         store_schemes(test_db, [record(f"f-{i}") for i in range(5)], failing)
     # Scheme documents are stored (keyword search still works) but no chunk exists without an embedding.
     assert test_db.scheme_chunks.count_documents({}) == 0

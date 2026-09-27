@@ -4,7 +4,7 @@ import json
 import httpx
 import pytest
 
-from app import config, providers
+from app import config, providers, upstream
 
 DIM = config.EMBEDDING_DIMENSIONS
 
@@ -25,8 +25,8 @@ def fake(monkeypatch):
                 return respond(request)
         return httpx.Response(404, json={"error": "no fake route"})
 
-    monkeypatch.setattr(providers, "http", httpx.Client(transport=httpx.MockTransport(handler)))
-    monkeypatch.setattr(providers.time, "sleep", state["sleeps"].append)
+    monkeypatch.setattr(upstream, "client", httpx.Client(transport=httpx.MockTransport(handler)))
+    monkeypatch.setattr(upstream, "sleep", state["sleeps"].append)
     monkeypatch.setattr(config, "GEMINI_API_KEY", "test-gemini-key")
     monkeypatch.setattr(config, "GROQ_API_KEY", "test-groq-key")
     monkeypatch.setattr(config, "GEMINI_EMBEDDING_MODEL", "gemini-embedding-2")
@@ -82,13 +82,13 @@ def test_legacy_embedding_model_uses_task_type(fake, monkeypatch):
 
 def test_wrong_dimension_embedding_is_rejected(fake):
     fake["routes"][EMBED_URL] = lambda r: embeddings_for(r, values=[1.0] * 10)
-    with pytest.raises(providers.ProviderError, match="10 dimensions"):
+    with pytest.raises(upstream.UpstreamError, match="10 dimensions"):
         providers.embed_query("x")
 
 
 def test_missing_embedding_count_is_rejected(fake):
     fake["routes"][EMBED_URL] = lambda r: httpx.Response(200, json={"embeddings": []})
-    with pytest.raises(providers.ProviderError, match="expected 1 embeddings"):
+    with pytest.raises(upstream.UpstreamError, match="expected 1 embeddings"):
         providers.embed_query("x")
 
 
@@ -102,7 +102,7 @@ def test_rate_limit_honours_retry_after_then_succeeds(fake):
 
 def test_non_retryable_error_is_not_retried(fake):
     fake["routes"][EMBED_URL] = lambda r: httpx.Response(400, text="bad request")
-    with pytest.raises(providers.ProviderError, match="HTTP 400"):
+    with pytest.raises(upstream.UpstreamError, match="HTTP 400"):
         providers.embed_documents([("t", "x")])
     assert len(fake["calls"]) == 1
 
@@ -150,7 +150,7 @@ def test_generate_uses_groq_alone_when_gemini_is_not_configured(fake, monkeypatc
 def test_generate_raises_when_every_provider_fails_without_leaking_keys(fake):
     fake["routes"][GEN_URL] = lambda r: httpx.Response(500, text="boom")
     fake["routes"][providers.GROQ_CHAT_URL] = lambda r: httpx.Response(401, text="invalid api key")
-    with pytest.raises(providers.ProviderError) as info:
+    with pytest.raises(upstream.UpstreamError) as info:
         providers.generate("s", "p")
     message = str(info.value)
     assert "gemini: HTTP 500" in message and "groq: HTTP 401" in message
@@ -160,7 +160,7 @@ def test_generate_raises_when_every_provider_fails_without_leaking_keys(fake):
 def test_generate_raises_when_nothing_is_configured(monkeypatch):
     monkeypatch.setattr(config, "GEMINI_API_KEY", None)
     monkeypatch.setattr(config, "GROQ_API_KEY", None)
-    with pytest.raises(providers.ProviderError, match="no LLM provider"):
+    with pytest.raises(upstream.UpstreamError, match="no LLM provider"):
         providers.generate("s", "p")
 
 
@@ -168,6 +168,6 @@ def test_transport_failure_is_retried_then_reported(fake):
     def fail(request):
         raise httpx.ConnectTimeout("timed out", request=request)
     fake["routes"][EMBED_URL] = fail
-    with pytest.raises(providers.ProviderError, match="ConnectTimeout"):
+    with pytest.raises(upstream.UpstreamError, match="ConnectTimeout"):
         providers.embed_query("x")
     assert len(fake["calls"]) == 2
