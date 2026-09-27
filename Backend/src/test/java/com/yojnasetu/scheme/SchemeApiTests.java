@@ -2,70 +2,24 @@ package com.yojnasetu.scheme;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Date;
-import java.util.List;
-
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpHeaders;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
-import com.mongodb.client.model.IndexOptions;
-import com.yojnasetu.IntegrationTest;
+import com.yojnasetu.Fixtures;
+import com.yojnasetu.IntegrationTestSupport;
 
 /** MOCK / TEST ONLY: the schemes below are invented fixtures, shaped like ingestion output. */
-@IntegrationTest
-class SchemeApiTests {
-
-	@Autowired
-	MockMvcTester mvc;
+class SchemeApiTests extends IntegrationTestSupport {
 
 	@Autowired
 	MongoTemplate mongo;
 
-	static Document scheme(String id, String name, String level, String state, List<String> categories,
-			List<String> tags, String description) {
-		return new Document("_id", id).append("name", name)
-			.append("description", description)
-			.append("eligibilityText", "Official eligibility text of " + id + ".")
-			.append("documents", null)
-			.append("level", level)
-			.append("state", state)
-			.append("categories", categories)
-			.append("tags", tags)
-			.append("beneficiaryTypes", List.of("Individual"))
-			.append("eligibility", state == null ? new Document() : new Document("states", List.of(state)))
-			.append("sourceUrl", "https://www.myscheme.gov.in/schemes/" + id)
-			.append("sourceName", "myScheme")
-			.append("nameKey", name.toLowerCase())
-			.append("syncedAt", new Date());
-	}
-
 	@BeforeEach
 	void seed() {
-		mongo.dropCollection("schemes");
-		mongo.getCollection("schemes").insertMany(List.of(
-				scheme("central-pension", "Test Old Age Pension", "Central", null,
-						List.of("Social welfare & Empowerment"), List.of("Pension", "Senior Citizen"),
-						"Monthly pension for elderly citizens."),
-				scheme("bihar-farm", "Test Farmer Support", "State", "Bihar",
-						List.of("Agriculture,Rural & Environment"), List.of("Farmer"), "Support for farmers."),
-				scheme("kerala-scholar", "Test Merit Scholarship", "State", "Kerala",
-						List.of("Education & Learning"), List.of("Scholarship", "Student"), "Scholarship for students."),
-				scheme("central-loan", "Test Enterprise Loan", "Central", null,
-						List.of("Business & Entrepreneurship"), List.of("Loan", "MSME"), "Loans for small businesses."),
-				scheme("jk-housing", "Test Housing Aid", "State", "Jammu & Kashmir", List.of("Housing & Shelter"),
-						List.of("Housing"), "Help to build a house.")));
-		// Mirrors the text index created by the ingestion pipeline (AI/ingestion/store.py).
-		mongo.getCollection("schemes").createIndex(
-				new Document("name", "text").append("shortTitle", "text").append("tags", "text")
-					.append("categories", "text").append("description", "text"),
-				new IndexOptions().name("scheme_text").defaultLanguage("english")
-					.weights(new Document("name", 10).append("shortTitle", 8).append("tags", 5)
-						.append("categories", 3).append("description", 2)));
+		Fixtures.reset(mongo, Fixtures.standardSchemes());
 	}
 
 	@Test

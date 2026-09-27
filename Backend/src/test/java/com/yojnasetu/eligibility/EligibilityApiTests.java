@@ -10,16 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
-import com.yojnasetu.IntegrationTest;
+import com.yojnasetu.IntegrationTestSupport;
 
 /** MOCK / TEST ONLY: invented schemes with invented eligibility rules. */
-@IntegrationTest
-class EligibilityApiTests {
-
-	@Autowired
-	MockMvcTester mvc;
+class EligibilityApiTests extends IntegrationTestSupport {
 
 	@Autowired
 	MongoTemplate mongo;
