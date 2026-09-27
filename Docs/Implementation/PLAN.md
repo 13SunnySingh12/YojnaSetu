@@ -57,7 +57,7 @@ Government sources (API Setu myScheme, data.gov.in OGD) ──> AI/ingestion ─
 - `[✓]` **YS-005** Ingestion sources: myScheme (API Setu v7) and OGD adapters (+ SQL cleaning). *Verify:* unit tests on documented shapes; live check in YS-019.
 
 ### Phase 2 — Backend and AI endpoints
-- `[ ]` **YS-006** Spring Boot skeleton: Mongo, health, ProblemDetail errors, CORS, validation, Testcontainers.
+- `[✓]` **YS-006** Spring Boot skeleton: Mongo, health, ProblemDetail errors, CORS, validation, Testcontainers.
 - `[ ]` **YS-007** Scheme APIs: detail, keyword search, filters, categories, needs. *Features 2, 3, 13–20, 28, 31.*
 - `[ ]` **YS-008** Eligibility engine and endpoint. *Features 5–12.*
 - `[ ]` **YS-009** FastAPI `/search`, `/related`, `/ask`, `/explain`, `/explain-eligibility`. *Features 4, 21–27, 30, 32.*
