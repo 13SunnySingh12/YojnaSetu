@@ -42,7 +42,7 @@ class SchemeController {
 			@RequestParam(required = false) @Size(max = 40) String need,
 			@RequestParam(defaultValue = "0") @Min(0) @Max(500) int page,
 			@RequestParam(defaultValue = "20") @Min(1) @Max(50) int size) {
-		SchemeFilter filter = new SchemeFilter(blankToNull(q), blankToNull(category), canonicalState(state),
+		SchemeFilter filter = new SchemeFilter(blankToNull(q), blankToNull(category), IndianStates.requireCanonical(state),
 				blankToNull(gender), age, blankToNull(beneficiaryType), blankToNull(level), knownNeed(need));
 		return repository.search(filter, page, size);
 	}
@@ -61,15 +61,6 @@ class SchemeController {
 
 	record FilterOptions(List<SchemeRepository.CategoryCount> categories, List<String> states,
 			List<String> beneficiaryTypes, List<Needs.Option> needs, List<String> genders, List<String> levels) {
-	}
-
-	static String canonicalState(String state) {
-		if (!StringUtils.hasText(state)) {
-			return null;
-		}
-		return IndianStates.canonical(state)
-			.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-					"state: not a recognised Indian state or union territory."));
 	}
 
 	private static String knownNeed(String need) {

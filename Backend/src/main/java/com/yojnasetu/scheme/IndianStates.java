@@ -6,6 +6,9 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 /** The 28 states and 8 union territories, used to validate a user's state. */
 public final class IndianStates {
 
@@ -24,6 +27,15 @@ public final class IndianStates {
 	public static Optional<String> canonical(String input) {
 		String key = normalize(input);
 		return ALL.stream().filter(s -> normalize(s).equals(key)).findFirst();
+	}
+
+	/** Canonical name of user input; null when blank; 400 Bad Request when it names no state or UT. */
+	public static String requireCanonical(String input) {
+		if (input == null || input.isBlank()) {
+			return null;
+		}
+		return canonical(input).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+				"state: not a recognised Indian state or union territory."));
 	}
 
 	/** Whether two state labels (for example a user's state and a scheme's state) name the same place. */

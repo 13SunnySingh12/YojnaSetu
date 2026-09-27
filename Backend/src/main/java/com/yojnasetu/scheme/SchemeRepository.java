@@ -68,15 +68,11 @@ public class SchemeRepository {
 		return new PageResult<>(mongo.find(query, SchemeSummary.class, COLLECTION), page, size, total);
 	}
 
-	/** Candidates for eligibility checks, narrowed by the database where a condition is unambiguous. */
-	public List<Scheme> findForEligibility(String canonicalState) {
+	/** Every scheme with just the fields an eligibility check needs. */
+	public List<Scheme> findForEligibility() {
+		// Known limit: full scan per check (a few thousand small documents); cache it if traffic grows.
 		Query query = new Query();
-		if (canonicalState != null) {
-			query.addCriteria(new Criteria().orOperator(where("state").isNull(),
-					where("state").regex(IndianStates.labelPattern(canonicalState))));
-		}
-		query.fields().include("name", "description", "level", "state", "ministry", "categories", "tags",
-				"eligibility", "eligibilityText", "sourceUrl", "sourceName");
+		query.fields().include("name", "description", "level", "state", "eligibility", "sourceUrl");
 		return mongo.find(query, Scheme.class);
 	}
 
