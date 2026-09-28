@@ -131,7 +131,7 @@ export function CompareToggle({ schemeId, name }) {
       onClick={() => !blocked && compare.toggle(schemeId)}
     >
       {selected ? <Check size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
-      {selected ? 'Added to compare' : 'Compare'}
+      {selected ? 'Added to compare' : blocked ? 'Compare list is full' : 'Compare'}
       <span className="sr-only"> {name}</span>
     </button>
   )

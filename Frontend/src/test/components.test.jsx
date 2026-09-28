@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { GuidanceNotice, NOT_AVAILABLE, OfficialText, RichText, StatusPlate } from '../components.jsx'
+import { CompareToggle, GuidanceNotice, NOT_AVAILABLE, OfficialText, RichText, StatusPlate } from '../components.jsx'
+import { CompareProvider } from '../compare.jsx'
 
 describe('OfficialText', () => {
   it('says plainly when the official source did not provide the text', () => {
@@ -56,5 +57,19 @@ describe('result labels', () => {
     render(<GuidanceNotice />)
     expect(screen.getByText('This is guidance only, not a decision.')).toBeTruthy()
     expect(screen.getByText(/concerned government department makes the final decision/)).toBeTruthy()
+  })
+})
+
+describe('CompareToggle', () => {
+  it('says the compare list is full instead of silently ignoring the click', () => {
+    sessionStorage.setItem('yojnasetu.compare', JSON.stringify(['a', 'b', 'c', 'd']))
+    render(
+      <CompareProvider>
+        <CompareToggle schemeId="e" name="Fifth scheme" />
+      </CompareProvider>,
+    )
+    const button = screen.getByRole('button', { name: /Compare list is full/ })
+    expect(button.getAttribute('aria-disabled')).toBe('true')
+    sessionStorage.clear()
   })
 })

@@ -8,20 +8,40 @@ const SOCIAL_CATEGORIES = [
 /** The question flow. Occupation is asked only when stored conditions actually name occupations. */
 export function buildQuestions(filters) {
   const questions = [
-    { key: 'age', title: 'How old are you?', hint: 'Your age in years.', kind: 'number', max: 120 },
+    {
+      key: 'age',
+      title: 'How old are you?',
+      hint: 'Many schemes have an age limit. Enter your age in years.',
+      kind: 'number',
+      max: 120,
+    },
     {
       key: 'state',
       title: 'Which state or union territory do you live in?',
+      hint: 'Many schemes are only for people who live in a particular state.',
       kind: 'select',
       options: filters.states.map((s) => [s, s]),
     },
-    { key: 'gender', title: 'What is your gender?', kind: 'choice', options: filters.genders.map((g) => [g, g]) },
-    { key: 'socialCategory', title: 'Which social category do you belong to?', kind: 'choice', options: SOCIAL_CATEGORIES },
+    {
+      key: 'gender',
+      title: 'What is your gender?',
+      hint: 'Some schemes are meant only for women, men or transgender persons.',
+      kind: 'choice',
+      options: filters.genders.map((g) => [g, g]),
+    },
+    {
+      key: 'socialCategory',
+      title: 'Which social category do you belong to?',
+      hint: 'Some schemes are meant for a particular social category, such as SC or ST.',
+      kind: 'choice',
+      options: SOCIAL_CATEGORIES,
+    },
   ]
   if (filters.occupations?.length) {
     questions.push({
       key: 'occupation',
       title: 'What is your main occupation?',
+      hint: 'Some schemes are only for certain kinds of work, such as farming.',
       kind: 'select',
       options: filters.occupations.map((o) => [o, o]),
     })
@@ -29,7 +49,7 @@ export function buildQuestions(filters) {
   questions.push({
     key: 'annualIncome',
     title: "What is your family's total income in a year?",
-    hint: 'In rupees, adding up all family members. An estimate is fine.',
+    hint: 'Many schemes have an income limit. Add up the yearly income of all family members, in rupees. An estimate is fine.',
     kind: 'number',
     max: 1_000_000_000,
   })

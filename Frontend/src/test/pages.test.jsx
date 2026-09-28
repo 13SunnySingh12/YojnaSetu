@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import { NOT_AVAILABLE } from '../components.jsx'
 import { CompareProvider } from '../compare.jsx'
+import BrowsePage from '../pages/BrowsePage.jsx'
 import EligibilityPage from '../pages/EligibilityPage.jsx'
 import SchemePage from '../pages/SchemePage.jsx'
 import SearchPage from '../pages/SearchPage.jsx'
@@ -100,6 +101,22 @@ describe('eligibility question flow', () => {
     expect(screen.getByText('Likely match')).toBeTruthy()
     expect(screen.getByText('Conditions you meet')).toBeTruthy()
     expect(screen.getByText(/State: Bihar/)).toBeTruthy()
+    expect(screen.getByText(/Only the conditions listed above could be checked/)).toBeTruthy()
+  })
+
+  it('says plainly when no schemes are loaded yet instead of blaming the answers', async () => {
+    const user = userEvent.setup()
+    stubApi([
+      ['GET', '/api/filters', 200, FILTERS],
+      ['POST', '/api/eligibility/check', 200, { likelyMatch: 0, moreInfoNeeded: 0, notAMatch: 0, results: [] }],
+    ])
+    renderAt('/eligibility', '/eligibility', <EligibilityPage />)
+    await screen.findByLabelText('How old are you?')
+    for (let i = 0; i < 5; i += 1) {
+      await user.click(screen.getByRole('button', { name: 'Skip this question' }))
+    }
+    expect(await screen.findByText('No schemes are loaded yet')).toBeTruthy()
+    expect(screen.queryByText('No stored scheme fits these answers')).toBeNull()
   })
 })
 
@@ -145,6 +162,15 @@ describe('scheme detail', () => {
   })
 })
 
+describe('scheme link problems', () => {
+  it('treats a malformed scheme link like a missing scheme', async () => {
+    stubApi([['GET', '/api/schemes/bad', 400, { detail: 'Some of the information provided is not valid.', errors: ['id: is not a valid scheme link'] }]])
+    renderAt('/schemes/bad', '/schemes/:id', <SchemePage />)
+    expect(await screen.findByText('This scheme was not found')).toBeTruthy()
+    expect(screen.queryByText(/is not a valid scheme link/)).toBeNull()
+  })
+})
+
 describe('search', () => {
   it('tells the user when only exact word matches are available', async () => {
     stubApi([
@@ -165,5 +191,29 @@ describe('search', () => {
     expect(await screen.findByText(/Showing exact word matches only/)).toBeTruthy()
     expect(screen.getByText('Matches your words')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Test Pension Scheme' }).getAttribute('href')).toBe('/schemes/test-scheme')
+  })
+})
+
+describe('browse', () => {
+  const EMPTY = { items: [], page: 0, size: 20, total: 0 }
+
+  it('says no schemes are loaded yet when nothing is stored', async () => {
+    stubApi([
+      ['GET', '/api/filters', 200, FILTERS],
+      ['GET', '/api/schemes', 200, EMPTY],
+    ])
+    renderAt('/schemes', '/schemes', <BrowsePage />)
+    expect(await screen.findByText('No schemes are loaded yet')).toBeTruthy()
+    expect(await screen.findByRole('option', { name: 'Central government' })).toBeTruthy()
+  })
+
+  it('suggests removing filters when filters exclude every scheme', async () => {
+    stubApi([
+      ['GET', '/api/filters', 200, FILTERS],
+      ['GET', '/api/schemes', 200, EMPTY],
+    ])
+    renderAt('/schemes?state=Kerala', '/schemes', <BrowsePage />)
+    expect(await screen.findByText('No schemes match these filters')).toBeTruthy()
+    expect(screen.queryByText('No schemes are loaded yet')).toBeNull()
   })
 })

@@ -104,7 +104,7 @@ export default function SchemePage() {
     }
   }, [data])
 
-  if (scheme.error?.status === 404) {
+  if (scheme.error?.status === 404 || scheme.error?.status === 400) {
     return (
       <div className="wrap">
         <Empty title="This scheme was not found">

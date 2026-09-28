@@ -104,11 +104,13 @@ function FilterForm({ applied, options, onApply, onClear }) {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="f-level">Level</label>
+            <label htmlFor="f-level">Run by</label>
             <select id="f-level" className="select" value={draft.level} onChange={(e) => setDraft({ ...draft, level: e.target.value })}>
-              <option value="">Central and state</option>
+              <option value="">Central or state government</option>
               {options?.levels.map((l) => (
-                <option key={l}>{l}</option>
+                <option key={l} value={l}>
+                  {l} government
+                </option>
               ))}
             </select>
           </div>
@@ -139,6 +141,7 @@ export default function BrowsePage() {
     setParams(next)
   }
 
+  const filtered = FIELDS.some((field) => applied[field])
   const need = options.data?.needs.find((n) => n.key === applied.need)
   const title = applied.category || (need ? `Schemes for: ${need.label}` : 'Browse all schemes')
 
@@ -164,7 +167,12 @@ export default function BrowsePage() {
         {result.loading && <Loading label="Loading schemes" />}
         {result.error && <ErrorMessage error={result.error} onRetry={result.retry} />}
         {result.loading && !result.data && <ListSkeleton />}
-        {result.data && result.data.items.length === 0 && (
+        {result.data && result.data.total === 0 && !filtered && (
+          <Empty title="No schemes are loaded yet">
+            <p>Scheme records appear here once they have been imported from the official sources.</p>
+          </Empty>
+        )}
+        {result.data && result.data.items.length === 0 && filtered && (
           <Empty title="No schemes match these filters">
             <p>Remove a filter, or describe your need in your own words.</p>
             <div className="inline-actions">

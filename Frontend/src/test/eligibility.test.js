@@ -9,6 +9,12 @@ describe('eligibility helpers', () => {
     expect(buildQuestions({ ...FILTERS, occupations: ['Farmer'] }).map((q) => q.key)).toContain('occupation')
   })
 
+  it('tells the user why each question is asked', () => {
+    for (const question of buildQuestions({ ...FILTERS, occupations: ['Farmer'] })) {
+      expect(question.hint, question.key).toMatch(/schemes/)
+    }
+  })
+
   it('sends only answered questions, with numbers as numbers', () => {
     expect(toProfile({ age: '25', state: 'Bihar', gender: '', annualIncome: '150000' })).toEqual({
       age: 25,

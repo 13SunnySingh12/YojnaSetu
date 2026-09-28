@@ -7,12 +7,19 @@ import { buildQuestions, describeAnswer, toProfile, validateAnswer } from '../el
 
 function Question({ question, value, error, onChange, titleRef }) {
   const errorId = error ? 'answer-error' : undefined
+  const hint = question.hint && (
+    <span className="field__hint" id="answer-hint">
+      {question.hint}
+    </span>
+  )
+  const describedBy = [question.hint ? 'answer-hint' : null, errorId].filter(Boolean).join(' ') || undefined
   if (question.kind === 'choice') {
     return (
-      <fieldset className="question question--fieldset" aria-describedby={errorId}>
+      <fieldset className="question question--fieldset" aria-describedby={describedBy}>
         <legend ref={titleRef} tabIndex={-1}>
           {question.title}
         </legend>
+        {hint}
         <div className="options options--inline">
           {question.options.map(([optionValue, label]) => (
             <label className="option" key={optionValue}>
@@ -40,18 +47,14 @@ function Question({ question, value, error, onChange, titleRef }) {
       <label className="question__title" htmlFor="answer" ref={titleRef} tabIndex={-1}>
         {question.title}
       </label>
-      {question.hint && (
-        <span className="field__hint" id="answer-hint">
-          {question.hint}
-        </span>
-      )}
+      {hint}
       {question.kind === 'select' ? (
         <select
           id="answer"
           className="select"
           value={value ?? ''}
           aria-invalid={Boolean(error)}
-          aria-describedby={errorId}
+          aria-describedby={describedBy}
           onChange={(event) => onChange(event.target.value)}
         >
           <option value="">Choose one</option>
@@ -69,7 +72,7 @@ function Question({ question, value, error, onChange, titleRef }) {
           autoComplete="off"
           value={value ?? ''}
           aria-invalid={Boolean(error)}
-          aria-describedby={[question.hint ? 'answer-hint' : null, errorId].filter(Boolean).join(' ') || undefined}
+          aria-describedby={describedBy}
           onChange={(event) => onChange(event.target.value.replace(/[,\s₹]/g, ''))}
         />
       )}
@@ -157,6 +160,11 @@ function Result({ result, profile }) {
           </div>
         )}
       </dl>
+      {result.status === 'LIKELY_MATCH' && (
+        <p className="fine">
+          Only the conditions listed above could be checked. Read the full official eligibility before you apply.
+        </p>
+      )}
       {explanation.status === 'done' && (
         <div className="simple" aria-live="polite">
           <span className="label">In simple words · written by AI from the result above</span>
@@ -267,7 +275,7 @@ export default function EligibilityPage() {
           {schemeId && scheme.data
             ? `Checking one scheme: ${scheme.data.name}. `
             : 'We compare your answers with the stored conditions of every scheme. '}
-          Skip any question you prefer not to answer.
+          Skip any question you prefer not to answer. YojnaSetu does not save your answers.
         </p>
       </header>
 
@@ -365,7 +373,11 @@ export default function EligibilityPage() {
                   </p>
                 </div>
               )}
-              {check.data.results.length === 0 ? (
+              {!schemeId && check.data.likelyMatch + check.data.moreInfoNeeded + check.data.notAMatch === 0 ? (
+                <Empty title="No schemes are loaded yet">
+                  <p>Scheme records appear here once they have been imported from the official sources.</p>
+                </Empty>
+              ) : check.data.results.length === 0 ? (
                 <Empty title="No stored scheme fits these answers">
                   <p>This does not mean you are not eligible for any scheme. Try searching in your own words.</p>
                   <div className="inline-actions">
