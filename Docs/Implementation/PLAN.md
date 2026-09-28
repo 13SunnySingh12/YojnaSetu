@@ -28,6 +28,7 @@ verified progress. Status key: `[✓]` done and verified · `[→]` in progress 
 | D8 | Ingestion lives in the Python AI project (`AI/ingestion`) and reuses its embedding client; re-runs re-embed only chunks whose content hash changed. | Spec §40–42; one Python dependency set. |
 | D9 | Deployment: backend + AI service as Docker web services on Render (Singapore); frontend on Vercel; CI in GitHub Actions triggers Render deploy hooks after tests pass. | Spec §50–53; Atlas cluster is co-located in Singapore. |
 | D10 | AI endpoints are rate limited per client and globally (in-memory, single instance). | LLM cost and abuse control. |
+| D11 | Two least-privilege Atlas users: `readWrite` on `yojnasetu` for ingestion (it owns collections, validator and indexes), `read` on `yojnasetu` for the deployed backend and AI service. | Neither service writes to MongoDB, so a leaked service credential cannot change or delete data. |
 
 ## 3. Assumptions
 

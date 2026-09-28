@@ -1,6 +1,7 @@
 # Render Blueprint: the Spring Boot backend and the FastAPI AI service as Docker web services.
 # Deploys are triggered by the CI workflow's deploy hooks after tests pass (autoDeployTrigger: off).
 # Values marked sync: false are entered in the Render dashboard; they are never stored in the repository.
+# MONGODB_URI here is for an Atlas user with only the read role on yojnasetu: neither service writes.
 services:
   - type: web
     name: yojnasetu-ai
