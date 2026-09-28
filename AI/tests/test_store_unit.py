@@ -65,3 +65,32 @@ def test_chunk_hash_changes_with_text_and_embedding_model(monkeypatch):
     assert build_chunks({**VALID, "benefits": "Rs 2000"})[1]["hash"] != base
     monkeypatch.setattr("app.config.GEMINI_EMBEDDING_MODEL", "another-model")
     assert build_chunks({**VALID, "benefits": "Rs 1000"})[1]["hash"] != base
+
+
+def test_hand_written_records_with_wrong_types_or_typos_are_rejected():
+    assert validate({**VALID, "benefit": "Rs 100"}) == "unknown field 'benefit'"
+    assert validate({**VALID, "benefits": ["Rs 100"]}) == "benefits must be text"
+    assert validate({**VALID, "tags": "pension"}) == "tags must be a list of text"
+    assert validate({**VALID, "references": [{"title": "Guide", "url": "https://example.com/g.pdf"}]}) == (
+        "references must be a list of {title, url} with official https links")
+    assert validate({**VALID, "faqs": [{"question": "Who?"}]}) == "faqs must be a list of {question, answer} text"
+
+
+@pytest.mark.parametrize("rules, problem", [
+    ({"maxIncome": 250000}, "unknown eligibility condition 'maxIncome'"),
+    ({"minAge": "18"}, "eligibility.minAge must be a whole number"),
+    ({"minAge": True}, "eligibility.minAge must be a whole number"),
+    ({"maxAnnualIncome": -1}, "eligibility.maxAnnualIncome must be a whole number"),
+    ({"minAge": 60, "maxAge": 18}, "eligibility.minAge is above maxAge"),
+    ({"states": "Kerala"}, "eligibility.states must be a list of text"),
+    ({"genders": ["Women"]}, "eligibility.genders must use Male, Female, Transgender or All"),
+    ({"socialCategories": ["Scheduled Caste"]}, "eligibility.socialCategories must use General, OBC, SC, ST or All"),
+])
+def test_eligibility_conditions_the_engine_cannot_read_are_rejected(rules, problem):
+    assert validate({**VALID, "eligibility": rules}) == problem
+
+
+def test_eligibility_conditions_in_the_engine_vocabulary_are_accepted():
+    rules = {"minAge": 18, "maxAge": 40, "genders": ["Female"], "states": ["Kerala"],
+             "socialCategories": ["Scheduled Caste (SC)", "ST"], "occupations": ["Farmer"], "maxAnnualIncome": 250000}
+    assert validate({**VALID, "eligibility": rules}) is None

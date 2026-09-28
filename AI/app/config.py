@@ -31,7 +31,5 @@ EMBEDDING_DIMENSIONS = 768
 # 0.760-0.776. A tuning knob, so it stays adjustable without a deploy as the corpus grows.
 RETRIEVAL_MIN_SCORE = float(_env("RETRIEVAL_MIN_SCORE", "0.81"))
 
-# Government data ingestion credentials (used only by `python -m ingestion`).
-APISETU_CLIENT_ID = _env("APISETU_CLIENT_ID")
-APISETU_API_KEY = _env("APISETU_API_KEY")
+# data.gov.in API key, used only by `python -m ingestion ogd`.
 DATA_GOV_IN_API_KEY = _env("DATA_GOV_IN_API_KEY")

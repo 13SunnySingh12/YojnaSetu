@@ -19,7 +19,7 @@ React (Frontend/) ──REST/JSON──> Spring Boot (Backend/) ──> MongoDB 
                                                                    ├─ Gemini: embeddings, generation
                                                                    ├─ Groq: generation fallback
                                                                    └─ Atlas Vector Search on scheme chunks
-Official sources (myScheme API on API Setu, data.gov.in) ──> AI/ingestion ──> MongoDB Atlas
+Official sources (data.gov.in API, verified myScheme / ministry pages) ──> AI/ingestion ──> MongoDB Atlas
 ```
 
 | Part | Stack | Responsibility |
@@ -48,19 +48,32 @@ cd Frontend && npm ci && npm run dev   # http://localhost:5173, proxies /api to 
 `AI_SERVICE_TOKEN` must be the same random value for the backend and the AI service. Without `GEMINI_API_KEY`
 / `GROQ_API_KEY` the AI features answer "unavailable" and everything else still works.
 
-Load official data (needs `APISETU_CLIENT_ID` / `APISETU_API_KEY` for myScheme, `DATA_GOV_IN_API_KEY` for
-data.gov.in, and `GEMINI_API_KEY` for embeddings):
+Load official data (needs `GEMINI_API_KEY` for embeddings, and `DATA_GOV_IN_API_KEY` for data.gov.in):
 
 ```bash
 cd AI
 python -m venv .venv && .venv/Scripts/pip install -r requirements-dev.txt   # Linux/macOS: .venv/bin/pip
 .venv/Scripts/python -m ingestion setup        # collections, source validator, indexes
-.venv/Scripts/python -m ingestion myscheme     # full run; --limit N or --slug SLUG for partial runs
+.venv/Scripts/python -m ingestion verified     # records in ingestion/verified_schemes.json
 .venv/Scripts/python -m ingestion ogd          # datasets listed in ingestion/ogd_datasets.json
 ```
 
-Re-running is safe: only changed text is re-embedded, and a complete myScheme run removes schemes the source no
-longer publishes (never on an empty or collapsed listing).
+myScheme publishes no developer API, so its scheme details are added by hand: copy each scheme from its official
+page (myScheme or the ministry site) into `ingestion/verified_schemes.json`, check it against that page, and keep
+the page as `sourceUrl`. Fields you leave out show as "Not available from the official source". `eligibility`
+takes only `minAge`, `maxAge`, `genders`, `states`, `socialCategories`, `occupations` and `maxAnnualIncome`;
+a record with a wrong type, an unknown field or a non-government link is rejected with the reason.
+
+```json
+[{"_id": "scheme-slug", "name": "Official scheme name", "sourceName": "myScheme",
+  "sourceUrl": "https://www.myscheme.gov.in/schemes/scheme-slug", "level": "Central",
+  "description": "…", "eligibilityText": "…", "benefits": "…", "documents": "…", "applicationProcess": "…",
+  "categories": ["…"], "eligibility": {"minAge": 18, "maxAnnualIncome": 250000}}]
+```
+
+Re-running is safe: only changed text is re-embedded. The verified file is the complete list, so a scheme removed
+from it is removed from the database (never when the file is empty or mostly emptied), and a verified scheme
+replaces the same scheme loaded from data.gov.in.
 
 ## Tests
 

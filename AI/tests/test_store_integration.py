@@ -104,7 +104,7 @@ def test_embedding_failure_skips_the_scheme_and_aborts_after_three_in_a_row(test
 def test_prune_removes_schemes_the_source_no_longer_publishes(test_db):
     ensure_schema(test_db)
     store_schemes(test_db, [record("keep"), record("gone")], FakeEmbedder())
-    assert prune_missing(test_db, "myScheme", {"keep"}) == 1
+    assert prune_missing(test_db, {"sourceName": "myScheme"}, {"keep"}) == 1
     assert [d["_id"] for d in test_db.schemes.find()] == ["keep"]
     assert test_db.scheme_chunks.count_documents({"schemeId": "gone"}) == 0
 

@@ -72,9 +72,9 @@ export default function App() {
             eligibility; the concerned government department makes the final decision.
           </p>
           <p>
-            Scheme information comes only from official Government of India sources: the myScheme platform
-            (MeitY, via API Setu) and the Open Government Data Platform (data.gov.in). Every scheme links to its
-            official page. YojnaSetu is an independent tool, not a government website.
+            Scheme information comes only from official Government of India sources: the Open Government Data
+            Platform (data.gov.in) and official scheme pages on myScheme and ministry websites. Every scheme links to
+            its official page. YojnaSetu is an independent tool, not a government website.
           </p>
         </div>
       </footer>

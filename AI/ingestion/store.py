@@ -31,6 +31,18 @@ SECTIONS = [
     ("conditions", ("conditions",)),
 ]
 
+TEXT_FIELDS = ("shortTitle", "description", "details", "eligibilityText", "benefits", "documents",
+               "applicationProcess", "conditions", "level", "state", "ministry", "department", "implementingAgency",
+               "openDate", "closeDate")
+LIST_FIELDS = ("categories", "tags", "beneficiaryTypes")
+# Comparable conditions, exactly as the backend eligibility engine reads them (EligibilityRules.java).
+RULE_LISTS = ("genders", "states", "socialCategories", "occupations")
+RULE_NUMBERS = ("minAge", "maxAge", "maxAnnualIncome")
+GENDERS = {"male", "female", "transgender", "all"}
+SOCIAL_CATEGORIES = {"general", "obc", "sc", "st", "all"}
+FIELDS = {"_id", "name", "sourceUrl", "sourceName", "nameKey", "references", "faqs", "eligibility",
+          *TEXT_FIELDS, *LIST_FIELDS}
+
 SCHEME_VALIDATOR = {"$jsonSchema": {
     "bsonType": "object",
     "required": ["_id", "name", "sourceUrl", "sourceName"],
@@ -87,6 +99,12 @@ def wait_for_vector_index(db: Database, timeout: float = 300) -> None:
         time.sleep(2)
 
 
+def empty_scheme() -> dict:
+    """The common document shape; None or an empty list means the official source did not provide it."""
+    return {**dict.fromkeys(TEXT_FIELDS), **{f: [] for f in LIST_FIELDS}, "references": [], "faqs": [],
+            "eligibility": {}}
+
+
 def validate(record: dict) -> str | None:
     """Returns why a record cannot be published, or None when it is valid."""
     if not SCHEME_ID.match(str(record.get("_id") or "")):
@@ -97,7 +115,61 @@ def validate(record: dict) -> str | None:
         return "missing or non-official source URL"
     if not str(record.get("sourceName") or "").strip():
         return "missing source name"
+    return _shape_problem(record)
+
+
+def _shape_problem(record: dict) -> str | None:
+    """Wrong types would break the backend when it reads the record, and typos would silently drop data."""
+    if unknown := sorted(set(record) - FIELDS):
+        return f"unknown field {unknown[0]!r}"
+    for field in TEXT_FIELDS:
+        if not isinstance(record.get(field), (str, type(None))):
+            return f"{field} must be text"
+    for field in LIST_FIELDS:
+        if not _texts(record.get(field, [])):
+            return f"{field} must be a list of text"
+    references = record.get("references", [])
+    if not isinstance(references, list) or not all(
+            isinstance(r, dict) and set(r) == {"title", "url"} and _texts([r["title"]])
+            and OFFICIAL_URL.match(str(r["url"])) for r in references):
+        return "references must be a list of {title, url} with official https links"
+    faqs = record.get("faqs", [])
+    if not isinstance(faqs, list) or not all(
+            isinstance(f, dict) and set(f) == {"question", "answer"} and _texts([f["question"], f["answer"]])
+            for f in faqs):
+        return "faqs must be a list of {question, answer} text"
+    return _rules_problem(record.get("eligibility", {}))
+
+
+def _rules_problem(rules) -> str | None:
+    if not isinstance(rules, dict):
+        return "eligibility must be an object"
+    if unknown := sorted(set(rules) - {*RULE_LISTS, *RULE_NUMBERS}):
+        return f"unknown eligibility condition {unknown[0]!r}"
+    for field in RULE_LISTS:
+        if not _texts(rules.get(field, [])):
+            return f"eligibility.{field} must be a list of text"
+    for field in RULE_NUMBERS:
+        value = rules.get(field)
+        if value is not None and (isinstance(value, bool) or not isinstance(value, int) or value < 0):
+            return f"eligibility.{field} must be a whole number"
+    if None not in (rules.get("minAge"), rules.get("maxAge")) and rules["minAge"] > rules["maxAge"]:
+        return "eligibility.minAge is above maxAge"
+    if any(g.lower() not in GENDERS for g in rules.get("genders", [])):
+        return "eligibility.genders must use Male, Female, Transgender or All"
+    if any(_category_code(c) not in SOCIAL_CATEGORIES for c in rules.get("socialCategories", [])):
+        return "eligibility.socialCategories must use General, OBC, SC, ST or All"
     return None
+
+
+def _texts(values) -> bool:
+    return isinstance(values, list) and all(isinstance(v, str) and v.strip() for v in values)
+
+
+def _category_code(value: str) -> str:
+    """"Scheduled Caste (SC)" and "SC" name the same category, as in the backend engine."""
+    match = re.search(r"\(([^)]+)\)\s*$", value)
+    return (match.group(1) if match else value).strip().lower()
 
 
 def split_text(text: str, limit: int = MAX_CHUNK_CHARS) -> list[str]:
@@ -176,9 +248,9 @@ def store_schemes(db: Database, records: list[dict], embed=None) -> dict:
     return stats
 
 
-def prune_missing(db: Database, source_name: str, seen_ids: set[str]) -> int:
-    """After a complete run of one source, removes that source's schemes it no longer publishes."""
-    gone = [d["_id"] for d in db.schemes.find({"sourceName": source_name, "_id": {"$nin": list(seen_ids)}}, {"_id": 1})]
+def prune_missing(db: Database, scope: dict, seen_ids: set[str]) -> int:
+    """After a complete run of one source, removes the schemes in `scope` that it no longer lists."""
+    gone = [d["_id"] for d in db.schemes.find({**scope, "_id": {"$nin": list(seen_ids)}}, {"_id": 1})]
     if gone:
         db.scheme_chunks.delete_many({"schemeId": {"$in": gone}})
         db.schemes.delete_many({"_id": {"$in": gone}})
