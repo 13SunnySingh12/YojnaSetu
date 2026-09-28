@@ -140,8 +140,14 @@ class AiApiTests extends IntegrationTestSupport {
 	}
 
 	@Test
-	void aiEndpointsAreRateLimitedPerClient() {
+	void aiEndpointsAreRateLimitedPerClient() throws InterruptedException {
 		FakeAiServer.respond("/ask", "{\"answer\": \"ok\", \"grounded\": true, \"sources\": []}");
+		// Limits count per calendar minute; start where all six requests fall in the same minute
+		// (a run that straddled a minute boundary failed in CI).
+		long untilNextMinute = 60_000 - System.currentTimeMillis() % 60_000;
+		if (untilNextMinute < 5_000) {
+			Thread.sleep(untilNextMinute);
+		}
 		String client = newClient();
 		for (int i = 0; i < 5; i++) {
 			assertThat(mvc.post().uri("/api/ask").header("X-Forwarded-For", client)
