@@ -39,6 +39,11 @@ public record Scheme(
 		String sourceName,
 		Instant syncedAt) {
 
+	/** Shape of every scheme id, also enforced by the ingestion pipeline. */
+	public static final String ID_PATTERN = "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$";
+
+	public static final String ID_MESSAGE = "is not a valid scheme link";
+
 	public record Reference(String title, String url) {
 	}
 

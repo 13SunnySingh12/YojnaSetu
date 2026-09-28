@@ -2,7 +2,8 @@
 
 Public API served by the Spring Boot backend. JSON in and out. Errors are RFC 9457 problem details
 (`application/problem+json`) with a human-readable `detail`; validation errors add an `errors` array.
-Missing official fields are `null` in responses.
+Missing official fields are `null` in responses. When the database is unreachable, data endpoints answer **503**
+("Scheme data is temporarily unavailable…") within about 5 seconds.
 
 ## Schemes
 

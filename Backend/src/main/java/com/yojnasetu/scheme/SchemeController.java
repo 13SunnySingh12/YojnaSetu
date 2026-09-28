@@ -20,8 +20,6 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api")
 class SchemeController {
 
-	static final String SCHEME_ID = "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$";
-
 	static final List<String> GENDERS = List.of("Male", "Female", "Transgender");
 
 	private final SchemeRepository repository;
@@ -48,7 +46,7 @@ class SchemeController {
 	}
 
 	@GetMapping("/schemes/{id}")
-	Scheme detail(@PathVariable @Pattern(regexp = SCHEME_ID) String id) {
+	Scheme detail(@PathVariable @Pattern(regexp = Scheme.ID_PATTERN, message = Scheme.ID_MESSAGE) String id) {
 		return repository.findById(id)
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No scheme exists with this id."));
 	}

@@ -54,7 +54,7 @@ class EligibilityController {
 			@Pattern(regexp = "Male|Female|Transgender") String gender,
 			@Pattern(regexp = "General|OBC|SC|ST") String socialCategory, @Size(max = 80) String occupation,
 			@PositiveOrZero @Max(1_000_000_000L) Long annualIncome,
-			@Size(max = 10) List<@Pattern(regexp = "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$") String> schemeIds) {
+			@Size(max = 10) List<@Pattern(regexp = Scheme.ID_PATTERN, message = Scheme.ID_MESSAGE) String> schemeIds) {
 	}
 
 	record SchemeResult(String schemeId, String name, String description, String level, String state,

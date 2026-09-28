@@ -36,7 +36,9 @@ class SchemeApiTests extends IntegrationTestSupport {
 	void unknownSchemeIsNotFoundAndMalformedIdIsRejected() {
 		assertThat(mvc.get().uri("/api/schemes/no-such-scheme")).hasStatus(404).bodyJson()
 			.extractingPath("$.detail").asString().contains("No scheme");
-		assertThat(mvc.get().uri("/api/schemes/{id}", "bad id!")).hasStatus(400);
+		// The reason is readable; the id pattern itself is never shown to people.
+		assertThat(mvc.get().uri("/api/schemes/{id}", "bad id!")).hasStatus(400).bodyJson()
+			.extractingPath("$.errors[0]").asString().isEqualTo("id: is not a valid scheme link");
 	}
 
 	@Test

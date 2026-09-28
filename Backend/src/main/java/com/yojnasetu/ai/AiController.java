@@ -31,8 +31,6 @@ import com.yojnasetu.scheme.SchemeSummary;
 @RequestMapping("/api")
 class AiController {
 
-	static final String SCHEME_ID = "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$";
-
 	static final int CANDIDATES = 50;
 
 	/** Explainable sections of a scheme and the heading the model sees for each. */
@@ -88,7 +86,7 @@ class AiController {
 	}
 
 	@GetMapping("/schemes/{id}/related")
-	RelatedResponse related(@PathVariable @Pattern(regexp = SCHEME_ID) String id) {
+	RelatedResponse related(@PathVariable @Pattern(regexp = Scheme.ID_PATTERN, message = Scheme.ID_MESSAGE) String id) {
 		try {
 			List<String> ids = ai.related(id, 5).stream().map(AiClient.Scored::schemeId).toList();
 			return new RelatedResponse(schemes.findSummaries(ids), true);
@@ -99,7 +97,7 @@ class AiController {
 	}
 
 	record AskRequest(@NotBlank @Size(min = 3, max = 500) String question,
-			@Pattern(regexp = SCHEME_ID) String schemeId) {
+			@Pattern(regexp = Scheme.ID_PATTERN, message = Scheme.ID_MESSAGE) String schemeId) {
 	}
 
 	/** Question answering grounded in stored scheme text (RAG in the AI service). */
@@ -118,7 +116,7 @@ class AiController {
 
 	/** "Explain simply": the official text of one section rewritten in plain words; the original stays. */
 	@PostMapping("/schemes/{id}/explain")
-	ExplainResponse explain(@PathVariable @Pattern(regexp = SCHEME_ID) String id,
+	ExplainResponse explain(@PathVariable @Pattern(regexp = Scheme.ID_PATTERN, message = Scheme.ID_MESSAGE) String id,
 			@Valid @RequestBody ExplainRequest request, HttpServletRequest http) {
 		Scheme scheme = schemes.findById(id)
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No scheme exists with this id."));
