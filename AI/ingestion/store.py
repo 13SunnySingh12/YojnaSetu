@@ -44,13 +44,17 @@ SCHEME_VALIDATOR = {"$jsonSchema": {
 
 
 def ensure_schema(db: Database) -> None:
-    """Idempotently creates collections, the source-URL validator and all indexes."""
-    names = db.list_collection_names()
-    if "schemes" in names:
-        db.command("collMod", "schemes", validator=SCHEME_VALIDATOR)
-    else:
+    """Idempotently creates collections, the source-URL validator and all indexes.
+
+    Works with the least-privilege readWrite role: collMod (a dbAdmin action) runs only when the
+    stored validator differs from SCHEME_VALIDATOR, so routine re-runs never need it.
+    """
+    existing = {c["name"]: c for c in db.list_collections()}
+    if "schemes" not in existing:
         db.create_collection("schemes", validator=SCHEME_VALIDATOR)
-    if "scheme_chunks" not in names:
+    elif existing["schemes"].get("options", {}).get("validator") != SCHEME_VALIDATOR:
+        db.command("collMod", "schemes", validator=SCHEME_VALIDATOR)
+    if "scheme_chunks" not in existing:
         db.create_collection("scheme_chunks")
 
     db.schemes.create_index(

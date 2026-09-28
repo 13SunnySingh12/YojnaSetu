@@ -2,11 +2,13 @@
 import time
 
 import pytest
+from pymongo import MongoClient, monitoring
 from pymongo.errors import WriteError
 
 from app import upstream
-from conftest import FakeEmbedder
-from ingestion.store import VECTOR_INDEX, ensure_schema, prune_missing, store_schemes, wait_for_vector_index
+from conftest import TEST_MONGODB_URI, FakeEmbedder
+from ingestion.store import (SCHEME_VALIDATOR, VECTOR_INDEX, ensure_schema, prune_missing, store_schemes,
+                             wait_for_vector_index)
 
 pytestmark = pytest.mark.integration
 
@@ -15,6 +17,39 @@ def record(scheme_id, **fields):
     return {"_id": scheme_id, "name": f"Test fixture {scheme_id} (MOCK / TEST ONLY)",
             "sourceUrl": f"https://www.myscheme.gov.in/schemes/{scheme_id}", "sourceName": "myScheme",
             "description": f"Description of {scheme_id}.", **fields}
+
+
+class CommandRecorder(monitoring.CommandListener):
+    def __init__(self):
+        self.names = []
+
+    def started(self, event):
+        self.names.append(event.command_name)
+
+    def succeeded(self, event):
+        pass
+
+    def failed(self, event):
+        pass
+
+
+def test_setup_reruns_without_collmod_so_readwrite_credentials_suffice(test_db):
+    recorder = CommandRecorder()
+    client = MongoClient(TEST_MONGODB_URI, event_listeners=[recorder])
+    db = client[test_db.name]
+    ensure_schema(db)
+    recorder.names.clear()
+    ensure_schema(db)  # routine re-run, as every ingestion run does
+    assert "collMod" not in recorder.names
+
+    # A validator that drifted is still corrected (that one step needs dbAdmin).
+    db.command("collMod", "schemes", validator={"$jsonSchema": {"bsonType": "object"}})
+    recorder.names.clear()
+    ensure_schema(db)
+    assert "collMod" in recorder.names
+    stored = next(db.list_collections(filter={"name": "schemes"}))["options"]["validator"]
+    assert stored == SCHEME_VALIDATOR
+    client.close()
 
 
 def test_database_rejects_a_scheme_without_an_official_source(test_db):

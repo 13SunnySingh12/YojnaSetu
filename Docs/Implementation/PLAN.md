@@ -77,7 +77,7 @@ Government sources (API Setu myScheme, data.gov.in OGD) ──> AI/ingestion ─
 ### Phase 5 — Live integration
 - `[!]` **YS-018** Credentials configured locally (manual).
 - `[→]` **YS-019** Live probes: embedding + chat model IDs; myScheme search-response shape and any conditions/exclusions field; structured eligibility facets; real OGD resource IDs for `ogd_datasets.json`; adapter fixes. *Done so far:* Gemini embeddings (`gemini-embedding-2`, 768-dim), Gemini `gemini-3.8-flash` and Groq `openai/gpt-oss-120b` generation verified live; retrieval threshold calibrated to 0.81 on real embeddings; end-to-end search, RAG, explain, related and eligibility explanation verified through the API. *Pending:* myScheme and data.gov.in credentials.
-- `[ ]` **YS-020** Real ingestion into Atlas; retrieval threshold calibration; grounding checks. *Features 40–44.*
+- `[→]` **YS-020** Real ingestion into Atlas; retrieval threshold calibration; grounding checks. *Features 40–44.* *Done so far:* Atlas inspected through the database MCP (cluster `yojnasetu-cluster`, MongoDB 8.0, no DB users, one access-list entry); `yojnasetu.scheme_chunks`, its `schemeId_1` index and the `chunk_vectors` vector index (768-dim cosine, filters `schemeId`, `section`) created and verified through the MCP, including the related-schemes query shape. `ensure_schema` re-runs no longer need `collMod`, so a `readWrite`-only user suffices. *Pending:* `schemes` (validator + weighted text index) is created by `python -m ingestion setup`, which the MCP cannot express; needs the Atlas DB user and URI (YS-018).
 - `[→]` **YS-021** Render + Vercel deployment and smoke tests. *Features 52–53.* Config committed (`render.yaml`, `Frontend/vercel.json`); not yet deployed.
 - `[ ]` **YS-022** Final audit against every feature in the spec.
 
@@ -87,3 +87,4 @@ Government sources (API Setu myScheme, data.gov.in OGD) ──> AI/ingestion ─
 |---|---|---|---|
 | 2026-09-27 | YS-001 | Analysis, baseline, plan | data.gov.in outage (external) |
 | 2026-09-28 | YS-018 | YS-001 to YS-017 verified: 73 AI, 44 backend, 12 frontend tests green locally and in GitHub Actions; local browser pass; Docker stack healthy and working | Credentials needed (Gemini, Groq, data.gov.in, API Setu, Atlas user + network); Render workspace suspended for billing |
+| 2026-09-28 | YS-020 | Gemini + Groq live; retrieval calibrated; Atlas chunk collection and vector index created and verified via MCP; least-privilege setup (74 AI tests) | Atlas DB user + URI, data.gov.in key, API Setu subscription; Render billing |
